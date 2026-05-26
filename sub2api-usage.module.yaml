@@ -18,10 +18,10 @@ env_schema:
 
 scriptings:
   - generic:
-      name: sub2api-usage-widget-v2
-      script_url: https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage-widget-v2.js
+      name: sub2api-usage-widget
+      script_url: https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage-widget.js
       timeout: 20
 
 widgets:
   - name: Sub2API 今日用量
-    script_name: sub2api-usage-widget-v2
+    script_name: sub2api-usage-widget

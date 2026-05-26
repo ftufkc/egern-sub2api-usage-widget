@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import widget, {
@@ -84,6 +85,19 @@ test('normalizes the base URL and builds the today stats URL', () => {
     buildStatsUrl('https://example.com', 'Asia/Shanghai'),
     'https://example.com/api/v1/usage/dashboard/stats?timezone=Asia%2FShanghai'
   );
+});
+
+test('uses a single unversioned module and script entrypoint', async () => {
+  const moduleYaml = await readFile(new URL('../sub2api-usage.module.yaml', import.meta.url), 'utf8');
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+
+  assert.match(moduleYaml, /name: Sub2API 今日用量\n/);
+  assert.match(moduleYaml, /name: sub2api-usage-widget\n/);
+  assert.match(moduleYaml, /script_url: https:\/\/raw\.githubusercontent\.com\/ftufkc\/egern-sub2api-usage-widget\/main\/sub2api-usage-widget\.js/);
+  assert.match(moduleYaml, /script_name: sub2api-usage-widget\n/);
+  assert.doesNotMatch(moduleYaml, /v2/);
+  assert.match(readme, /main\/sub2api-usage\.module\.yaml/);
+  assert.doesNotMatch(readme, /v2/);
 });
 
 test('formats numbers, cost, and duration for compact widget display', () => {

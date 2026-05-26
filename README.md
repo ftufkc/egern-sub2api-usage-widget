@@ -12,7 +12,7 @@ Egern 小组件模块，用来查看 Sub2API 今天的用量：
 在 Egern 中进入 `工具` -> `模块` -> 右上角 `+`，添加下面的模块 URL：
 
 ```text
-https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage-v2.module.yaml
+https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage.module.yaml
 ```
 
 保存后进入模块的 `Env` 配置，填写：
@@ -23,15 +23,17 @@ https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api
 | `EMAIL` | Sub2API 登录邮箱 |
 | `PASSWORD` | Sub2API 登录密码 |
 
-然后进入 `分析` -> 左上角小组件画廊，选择 `Sub2API 今日用量 v2`。添加到 iOS 主屏幕后，长按 Egern 小组件并在编辑界面选择这个小组件名称。
+然后进入 `分析` -> 左上角小组件画廊，选择 `Sub2API 今日用量`。添加到 iOS 主屏幕后，长按 Egern 小组件并在编辑界面选择这个小组件名称。
 
 ## 数据口径
 
 小组件每次刷新时会：
 
 1. 请求 `POST /api/v1/auth/login` 登录；
-2. 请求 `GET /api/v1/usage/dashboard/stats?timezone=...` 读取普通用户今日统计；
+2. 请求 `GET /api/v1/usage/dashboard/stats?timezone=...` 读取当前登录账号的今日 dashboard 统计；
 3. 显示 `today_requests`、`today_tokens`、`today_actual_cost`、`average_duration_ms`，并在 Token/消费卡片中补充输入输出 Token 和标准消费。
+
+当前脚本不再调用 admin 专用统计接口。管理员账号如果可以访问上述 dashboard 接口，会显示该账号在 dashboard 中返回的今日用量；不会读取平台全局 admin 统计。
 
 脚本会携带当前系统时区；无法读取时默认使用 `Asia/Shanghai`。刷新时间由 iOS 和 Egern 共同调度，脚本会请求约 10 分钟后刷新。
 
