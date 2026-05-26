@@ -1,0 +1,13 @@
+{
+  "name": "egern-sub2api-usage-widget",
+  "version": "1.0.0",
+  "description": "Egern widget module for today's Sub2API usage.",
+  "type": "module",
+  "main": "sub2api-usage-widget.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
