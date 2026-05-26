@@ -60,7 +60,7 @@ test('normalizes the base URL and builds the today stats URL', () => {
   assert.equal(normalizeBaseUrl('https://example.com/'), 'https://example.com');
   assert.equal(
     buildStatsUrl('https://example.com', 'Asia/Shanghai'),
-    'https://example.com/api/v1/admin/usage/stats?period=today&timezone=Asia%2FShanghai'
+    'https://example.com/api/v1/usage/dashboard/stats?timezone=Asia%2FShanghai'
   );
 });
 
@@ -92,9 +92,9 @@ test('fetches today usage with credentials from env', async () => {
       createResponse({
         code: 0,
         data: {
-          total_requests: 42,
-          total_tokens: 123456,
-          total_actual_cost: 1.2345,
+          today_requests: 42,
+          today_tokens: 123456,
+          today_actual_cost: 1.2345,
           average_duration_ms: 678.9,
         },
       }),
@@ -118,7 +118,7 @@ test('fetches today usage with credentials from env', async () => {
   assert.equal(calls[1].method, 'GET');
   assert.equal(
     calls[1].url,
-    'https://sub2api.example.com/api/v1/admin/usage/stats?period=today&timezone=Asia%2FShanghai'
+    'https://sub2api.example.com/api/v1/usage/dashboard/stats?timezone=Asia%2FShanghai'
   );
   assert.equal(calls[1].options.headers.Authorization, 'Bearer access-token');
   assert.equal(calls.length, 2);
@@ -154,9 +154,9 @@ test('renders a medium widget with the four requested metrics', async () => {
       createResponse({
         code: 0,
         data: {
-          total_requests: 42,
-          total_tokens: 123456,
-          total_actual_cost: 1.2345,
+          today_requests: 42,
+          today_tokens: 123456,
+          today_actual_cost: 1.2345,
           average_duration_ms: 678.9,
         },
       }),

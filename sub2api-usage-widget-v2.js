@@ -55,9 +55,9 @@ export async function fetchTodayUsage(ctx) {
   const stats = unwrapApiResponse(statsResponse, '读取失败');
 
   return {
-    totalRequests: toFiniteNumber(stats.total_requests),
-    totalTokens: toFiniteNumber(stats.total_tokens),
-    totalActualCost: toFiniteNumber(stats.total_actual_cost),
+    totalRequests: toFiniteNumber(stats.today_requests),
+    totalTokens: toFiniteNumber(stats.today_tokens),
+    totalActualCost: toFiniteNumber(stats.today_actual_cost),
     averageDurationMs: toFiniteNumber(stats.average_duration_ms),
   };
 }
@@ -74,10 +74,9 @@ export function normalizeBaseUrl(value) {
 
 export function buildStatsUrl(baseUrl, timezone) {
   const params = new URLSearchParams({
-    period: 'today',
     timezone: timezone || 'Asia/Shanghai',
   });
-  return `${normalizeBaseUrl(baseUrl)}/api/v1/admin/usage/stats?${params.toString()}`;
+  return `${normalizeBaseUrl(baseUrl)}/api/v1/usage/dashboard/stats?${params.toString()}`;
 }
 
 export function formatNumber(value) {
