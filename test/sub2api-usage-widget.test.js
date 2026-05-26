@@ -66,8 +66,9 @@ test('normalizes the base URL and builds the today stats URL', () => {
 
 test('formats numbers, cost, and duration for compact widget display', () => {
   assert.equal(formatNumber(999), '999');
-  assert.equal(formatNumber(12_345), '12.3K');
-  assert.equal(formatNumber(12_345_678), '12.3M');
+  assert.equal(formatNumber(1_876, { compact: false }), '1,876');
+  assert.equal(formatNumber(12_345), '12.35K');
+  assert.equal(formatNumber(12_345_678), '12.35M');
   assert.equal(formatCost(0), '$0.00');
   assert.equal(formatCost(1.234), '$1.234');
   assert.equal(formatDuration(987.6), '988 ms');
@@ -86,7 +87,7 @@ test('fetches today usage with credentials from env', async () => {
         code: 0,
         data: {
           access_token: 'access-token',
-          user: { role: 'admin' },
+          user: { role: 'user' },
         },
       }),
       createResponse({
@@ -94,6 +95,9 @@ test('fetches today usage with credentials from env', async () => {
         data: {
           today_requests: 42,
           today_tokens: 123456,
+          today_input_tokens: 120000,
+          today_output_tokens: 3456,
+          today_cost: 1.5,
           today_actual_cost: 1.2345,
           average_duration_ms: 678.9,
         },
@@ -106,6 +110,9 @@ test('fetches today usage with credentials from env', async () => {
   assert.deepEqual(usage, {
     totalRequests: 42,
     totalTokens: 123456,
+    inputTokens: 120000,
+    outputTokens: 3456,
+    standardCost: 1.5,
     totalActualCost: 1.2345,
     averageDurationMs: 678.9,
   });
@@ -154,10 +161,13 @@ test('renders a medium widget with the four requested metrics', async () => {
       createResponse({
         code: 0,
         data: {
-          today_requests: 42,
-          today_tokens: 123456,
-          today_actual_cost: 1.2345,
-          average_duration_ms: 678.9,
+          today_requests: 1876,
+          today_tokens: 212670000,
+          today_input_tokens: 10370000,
+          today_output_tokens: 923120,
+          today_cost: 1.5,
+          today_actual_cost: 179.8771,
+          average_duration_ms: 15440,
         },
       }),
     ],
@@ -167,11 +177,20 @@ test('renders a medium widget with the four requested metrics', async () => {
   const serialized = JSON.stringify(result);
 
   assert.equal(result.type, 'widget');
-  assert.match(serialized, /今日用量/);
-  assert.match(serialized, /42/);
-  assert.match(serialized, /123\.5K/);
-  assert.match(serialized, /\$1\.2345/);
-  assert.match(serialized, /679 ms/);
+  assert.match(serialized, /总请求数/);
+  assert.match(serialized, /总 Token/);
+  assert.match(serialized, /总消费/);
+  assert.match(serialized, /平均耗时/);
+  assert.match(serialized, /今日范围内/);
+  assert.match(serialized, /输入: 10\.37M \/ 输出: 923\.12K/);
+  assert.match(serialized, /实际 \/ \$1\.5 标准/);
+  assert.match(serialized, /每次请求/);
+  assert.match(serialized, /sf-symbol:doc\.text/);
+  assert.match(serialized, /shadowRadius/);
+  assert.match(serialized, /1,876/);
+  assert.match(serialized, /212\.67M/);
+  assert.match(serialized, /\$179\.8771/);
+  assert.match(serialized, /15\.4 s/);
   assert.ok(Date.parse(result.refreshAfter) > Date.now());
 });
 

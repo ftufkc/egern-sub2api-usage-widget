@@ -11,10 +11,10 @@ env_schema:
     description: Sub2API 站点根地址，例如 https://example.com。不要填写 /admin/usage。
   EMAIL:
     name: 登录账号
-    description: Sub2API 管理员邮箱。
+    description: Sub2API 登录邮箱。
   PASSWORD:
     name: 登录密码
-    description: Sub2API 管理员密码。此值仅保存在你的 Egern 配置中。
+    description: Sub2API 登录密码。此值仅保存在你的 Egern 配置中。
 
 scriptings:
   - generic:

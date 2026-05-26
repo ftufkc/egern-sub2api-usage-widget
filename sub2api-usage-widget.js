@@ -1,18 +1,60 @@
 const COLORS = {
-  background: { light: '#F6F8FA', dark: '#111827' },
-  panel: { light: '#FFFFFF', dark: '#1F2937' },
-  title: { light: '#111827', dark: '#F9FAFB' },
-  muted: { light: '#6B7280', dark: '#A7B0C0' },
-  value: { light: '#0F766E', dark: '#2DD4BF' },
+  background: { light: '#EAF8F5', dark: '#101B1F' },
+  panel: { light: '#FFFFFF', dark: '#1B252B' },
+  title: { light: '#697080', dark: '#B8C0CC' },
+  value: { light: '#121827', dark: '#F5F7FA' },
+  muted: { light: '#737987', dark: '#9EA8B5' },
+  blue: { light: '#2F6FCB', dark: '#83B7FF' },
+  blueBg: { light: '#E4F0FF', dark: '#21344B' },
+  amber: { light: '#D28A1A', dark: '#FFD37C' },
+  amberBg: { light: '#FFF4CD', dark: '#4A3920' },
+  green: { light: '#23A45D', dark: '#6EE7A0' },
+  greenBg: { light: '#DDF8E7', dark: '#1D4430' },
+  purple: { light: '#8D39D5', dark: '#D7A8FF' },
+  purpleBg: { light: '#F1E3FA', dark: '#3E2D4C' },
+  shadow: { light: '#9CB7B2', dark: '#000000' },
   warning: { light: '#B45309', dark: '#FBBF24' },
   danger: { light: '#B91C1C', dark: '#FCA5A5' },
 };
 
 const METRICS = [
-  { label: '请求数', key: 'totalRequests', formatter: formatNumber },
-  { label: 'Tokens', key: 'totalTokens', formatter: formatNumber },
-  { label: '消费', key: 'totalActualCost', formatter: formatCost },
-  { label: '耗时', key: 'averageDurationMs', formatter: formatDuration },
+  {
+    label: '总请求数',
+    key: 'totalRequests',
+    formatter: (value) => formatNumber(value, { compact: false }),
+    subtitle: () => '今日范围内',
+    icon: 'sf-symbol:doc.text',
+    iconColor: COLORS.blue,
+    iconBackground: COLORS.blueBg,
+  },
+  {
+    label: '总 Token',
+    key: 'totalTokens',
+    formatter: formatNumber,
+    subtitle: (usage) => `输入: ${formatNumber(usage.inputTokens)} / 输出: ${formatNumber(usage.outputTokens)}`,
+    icon: 'sf-symbol:cube',
+    iconColor: COLORS.amber,
+    iconBackground: COLORS.amberBg,
+  },
+  {
+    label: '总消费',
+    key: 'totalActualCost',
+    formatter: formatCost,
+    subtitle: (usage) => `实际 / ${formatCost(usage.standardCost)} 标准`,
+    icon: 'sf-symbol:dollarsign.circle',
+    iconColor: COLORS.green,
+    iconBackground: COLORS.greenBg,
+    valueColor: COLORS.green,
+  },
+  {
+    label: '平均耗时',
+    key: 'averageDurationMs',
+    formatter: formatDuration,
+    subtitle: () => '每次请求',
+    icon: 'sf-symbol:clock',
+    iconColor: COLORS.purple,
+    iconBackground: COLORS.purpleBg,
+  },
 ];
 
 export default async function sub2apiUsageWidget(ctx) {
@@ -57,6 +99,9 @@ export async function fetchTodayUsage(ctx) {
   return {
     totalRequests: toFiniteNumber(stats.today_requests),
     totalTokens: toFiniteNumber(stats.today_tokens),
+    inputTokens: toFiniteNumber(stats.today_input_tokens),
+    outputTokens: toFiniteNumber(stats.today_output_tokens),
+    standardCost: toFiniteNumber(stats.today_cost),
     totalActualCost: toFiniteNumber(stats.today_actual_cost),
     averageDurationMs: toFiniteNumber(stats.average_duration_ms),
   };
@@ -79,12 +124,16 @@ export function buildStatsUrl(baseUrl, timezone) {
   return `${normalizeBaseUrl(baseUrl)}/api/v1/usage/dashboard/stats?${params.toString()}`;
 }
 
-export function formatNumber(value) {
+export function formatNumber(value, options = {}) {
   const number = toFiniteNumber(value);
+  if (options.compact === false) {
+    return Math.round(number).toLocaleString('en-US');
+  }
+
   const absolute = Math.abs(number);
-  if (absolute >= 1_000_000_000) return `${trimTrailingZeros(number / 1_000_000_000)}B`;
-  if (absolute >= 1_000_000) return `${trimTrailingZeros(number / 1_000_000)}M`;
-  if (absolute >= 1_000) return `${trimTrailingZeros(number / 1_000)}K`;
+  if (absolute >= 1_000_000_000) return `${trimTrailingZeros(number / 1_000_000_000, 2)}B`;
+  if (absolute >= 1_000_000) return `${trimTrailingZeros(number / 1_000_000, 2)}M`;
+  if (absolute >= 1_000) return `${trimTrailingZeros(number / 1_000, 2)}K`;
   return String(Math.round(number));
 }
 
@@ -166,41 +215,15 @@ function unwrapApiResponse(payload, fallbackTitle) {
 
 function renderUsageWidget(ctx, usage) {
   const compact = isCompactFamily(ctx?.widgetFamily);
-  const content = compact ? compactMetricRows(usage) : gridMetricRows(usage);
+  const content = compact ? compactMetricRows(usage) : dashboardGrid(usage);
 
   return {
     type: 'widget',
     refreshAfter: refreshAfter(10),
-    padding: compact ? 12 : 14,
-    gap: compact ? 7 : 10,
+    padding: compact ? 12 : 10,
+    gap: compact ? 7 : 0,
     backgroundColor: COLORS.background,
-    children: [
-      {
-        type: 'stack',
-        direction: 'row',
-        alignItems: 'center',
-        children: [
-          {
-            type: 'text',
-            text: 'Sub2API 今日用量',
-            font: { size: compact ? 'caption1' : 'headline', weight: 'bold' },
-            textColor: COLORS.title,
-            maxLines: 1,
-            minScale: 0.75,
-          },
-          { type: 'spacer' },
-          {
-            type: 'date',
-            date: new Date().toISOString(),
-            format: 'time',
-            font: { size: 'caption2', weight: 'medium' },
-            textColor: COLORS.muted,
-            maxLines: 1,
-          },
-        ],
-      },
-      content,
-    ],
+    children: [content],
   };
 }
 
@@ -213,7 +236,7 @@ function compactMetricRows(usage) {
       type: 'stack',
       direction: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 7,
       children: [
         {
           type: 'text',
@@ -227,7 +250,7 @@ function compactMetricRows(usage) {
           type: 'text',
           text: metric.formatter(usage[metric.key]),
           font: { size: 'caption1', weight: 'semibold' },
-          textColor: COLORS.value,
+          textColor: metric.valueColor || COLORS.value,
           textAlign: 'right',
           maxLines: 1,
           minScale: 0.65,
@@ -237,13 +260,14 @@ function compactMetricRows(usage) {
   };
 }
 
-function gridMetricRows(usage) {
+function dashboardGrid(usage) {
   const rows = [];
   for (let index = 0; index < METRICS.length; index += 2) {
     rows.push({
       type: 'stack',
       direction: 'row',
-      gap: 8,
+      gap: 10,
+      flex: 1,
       children: [
         metricCard(METRICS[index], usage),
         metricCard(METRICS[index + 1], usage),
@@ -253,7 +277,8 @@ function gridMetricRows(usage) {
   return {
     type: 'stack',
     direction: 'column',
-    gap: 8,
+    gap: 10,
+    flex: 1,
     children: rows,
   };
 }
@@ -261,27 +286,68 @@ function gridMetricRows(usage) {
 function metricCard(metric, usage) {
   return {
     type: 'stack',
-    direction: 'column',
+    direction: 'row',
+    alignItems: 'center',
     flex: 1,
-    gap: 3,
-    padding: [8, 9],
+    gap: 10,
+    padding: [10, 12],
     backgroundColor: COLORS.panel,
-    borderRadius: 8,
+    borderRadius: 18,
+    shadowColor: COLORS.shadow,
+    shadowRadius: 3,
+    shadowOffset: { x: 0, y: 1 },
     children: [
       {
-        type: 'text',
-        text: metric.label,
-        font: { size: 'caption2', weight: 'medium' },
-        textColor: COLORS.muted,
-        maxLines: 1,
+        type: 'stack',
+        direction: 'column',
+        alignItems: 'center',
+        width: 46,
+        height: 46,
+        padding: 11,
+        backgroundColor: metric.iconBackground,
+        borderRadius: 12,
+        children: [
+          {
+            type: 'image',
+            src: metric.icon,
+            width: 24,
+            height: 24,
+            color: metric.iconColor,
+          },
+        ],
       },
       {
-        type: 'text',
-        text: metric.formatter(usage[metric.key]),
-        font: { size: 'title3', weight: 'bold' },
-        textColor: COLORS.value,
-        maxLines: 1,
-        minScale: 0.55,
+        type: 'stack',
+        direction: 'column',
+        alignItems: 'start',
+        flex: 1,
+        gap: 3,
+        children: [
+          {
+            type: 'text',
+            text: metric.label,
+            font: { size: 'headline', weight: 'semibold' },
+            textColor: COLORS.title,
+            maxLines: 1,
+            minScale: 0.62,
+          },
+          {
+            type: 'text',
+            text: metric.formatter(usage[metric.key]),
+            font: { size: 'largeTitle', weight: 'bold' },
+            textColor: metric.valueColor || COLORS.value,
+            maxLines: 1,
+            minScale: 0.45,
+          },
+          {
+            type: 'text',
+            text: metric.subtitle(usage),
+            font: { size: 'subheadline', weight: 'regular' },
+            textColor: COLORS.muted,
+            maxLines: 2,
+            minScale: 0.55,
+          },
+        ],
       },
     ],
   };

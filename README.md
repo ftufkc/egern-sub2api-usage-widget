@@ -20,8 +20,8 @@ https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api
 | 参数 | 说明 |
 | --- | --- |
 | `BASE_URL` | Sub2API 站点根地址，例如 `https://example.com`，不要填写 `/admin/usage` |
-| `EMAIL` | Sub2API 管理员邮箱 |
-| `PASSWORD` | Sub2API 管理员密码 |
+| `EMAIL` | Sub2API 登录邮箱 |
+| `PASSWORD` | Sub2API 登录密码 |
 
 然后进入 `分析` -> 左上角小组件画廊，选择 `Sub2API 今日用量 v2`。添加到 iOS 主屏幕后，长按 Egern 小组件并在编辑界面选择这个小组件名称。
 
@@ -30,8 +30,8 @@ https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api
 小组件每次刷新时会：
 
 1. 请求 `POST /api/v1/auth/login` 登录；
-2. 请求 `GET /api/v1/admin/usage/stats?period=today` 读取今日统计；
-3. 显示 `total_requests`、`total_tokens`、`total_actual_cost`、`average_duration_ms`。
+2. 请求 `GET /api/v1/usage/dashboard/stats?timezone=...` 读取普通用户今日统计；
+3. 显示 `today_requests`、`today_tokens`、`today_actual_cost`、`average_duration_ms`，并在 Token/消费卡片中补充输入输出 Token 和标准消费。
 
 脚本会携带当前系统时区；无法读取时默认使用 `Asia/Shanghai`。刷新时间由 iOS 和 Egern 共同调度，脚本会请求约 10 分钟后刷新。
 
