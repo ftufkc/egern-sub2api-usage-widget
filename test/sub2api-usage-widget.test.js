@@ -71,6 +71,7 @@ test('fetches today usage with credentials from env', async () => {
         code: 0,
         data: {
           access_token: 'access-token',
+          refresh_token: 'refresh-token',
           user: { role: 'admin' },
         },
       }),
@@ -83,6 +84,7 @@ test('fetches today usage with credentials from env', async () => {
           average_duration_ms: 678.9,
         },
       }),
+      createResponse({ code: 0, data: { message: 'Logged out successfully' } }),
     ],
   });
 
@@ -106,6 +108,11 @@ test('fetches today usage with credentials from env', async () => {
     'https://sub2api.example.com/api/v1/admin/usage/stats?period=today&timezone=Asia%2FShanghai'
   );
   assert.equal(calls[1].options.headers.Authorization, 'Bearer access-token');
+  assert.equal(calls[2].method, 'POST');
+  assert.equal(calls[2].url, 'https://sub2api.example.com/api/v1/auth/logout');
+  assert.deepEqual(JSON.parse(calls[2].options.body), {
+    refresh_token: 'refresh-token',
+  });
 });
 
 test('renders a medium widget with the four requested metrics', async () => {

@@ -40,6 +40,7 @@ export async function fetchTodayUsage(ctx) {
   });
   const loginPayload = unwrapApiResponse(loginResponse, '登录失败');
   const accessToken = trimString(loginPayload.access_token);
+  const refreshToken = trimString(loginPayload.refresh_token);
 
   if (!accessToken) {
     if (loginPayload.requires_2fa) {
@@ -48,11 +49,16 @@ export async function fetchTodayUsage(ctx) {
     throw new WidgetError('登录失败', '登录响应缺少 access_token');
   }
 
-  const timezone = getTimezone();
-  const statsResponse = await getJson(ctx, buildStatsUrl(baseUrl, timezone), {
-    Authorization: `Bearer ${accessToken}`,
-  });
-  const stats = unwrapApiResponse(statsResponse, '读取失败');
+  let stats;
+  try {
+    const timezone = getTimezone();
+    const statsResponse = await getJson(ctx, buildStatsUrl(baseUrl, timezone), {
+      Authorization: `Bearer ${accessToken}`,
+    });
+    stats = unwrapApiResponse(statsResponse, '读取失败');
+  } finally {
+    await logout(ctx, baseUrl, refreshToken);
+  }
 
   return {
     totalRequests: toFiniteNumber(stats.total_requests),
@@ -113,6 +119,18 @@ async function postJson(ctx, url, body) {
 async function getJson(ctx, url, headers) {
   const response = await ctx.http.get(url, { headers });
   return parseJsonResponse(response, '请求失败');
+}
+
+async function logout(ctx, baseUrl, refreshToken) {
+  if (!refreshToken) return;
+
+  try {
+    await postJson(ctx, `${baseUrl}/api/v1/auth/logout`, {
+      refresh_token: refreshToken,
+    });
+  } catch {
+    // Logout is best-effort. Usage data is still valid if token revocation fails.
+  }
 }
 
 async function parseJsonResponse(response, fallbackTitle) {
