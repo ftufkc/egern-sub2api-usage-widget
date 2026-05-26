@@ -37,7 +37,7 @@ export async function fetchTodayUsage(ctx) {
   const loginResponse = await postJson(ctx, `${baseUrl}/api/v1/auth/login`, {
     email,
     password,
-  });
+  }, '登录失败');
   const loginPayload = unwrapApiResponse(loginResponse, '登录失败');
   const accessToken = trimString(loginPayload.access_token);
 
@@ -102,37 +102,59 @@ export function formatDuration(value) {
   return `${Math.round(ms)} ms`;
 }
 
-async function postJson(ctx, url, body) {
+async function postJson(ctx, url, body, fallbackTitle = '请求失败') {
   const response = await ctx.http.post(url, {
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body,
   });
-  return parseJsonResponse(response, '请求失败');
+  return parseJsonResponse(response, fallbackTitle, url);
 }
 
 async function getJson(ctx, url, headers) {
   const response = await ctx.http.get(url, { headers });
-  return parseJsonResponse(response, '请求失败');
+  return parseJsonResponse(response, '请求失败', url);
 }
 
-async function parseJsonResponse(response, fallbackTitle) {
+async function parseJsonResponse(response, fallbackTitle, url = '') {
   if (!response) {
     throw new WidgetError(fallbackTitle, '没有收到服务器响应');
   }
 
   const status = Number(response.status ?? 200);
+  const route = summarizeUrl(url);
   let payload;
   try {
     payload = await response.json();
   } catch {
-    throw new WidgetError(fallbackTitle, '服务器返回了无法解析的 JSON');
+    const preview = await safeResponsePreview(response);
+    const statusText = Number.isFinite(status) ? `HTTP ${status}` : 'HTTP 状态未知';
+    throw new WidgetError(fallbackTitle, `${route}${statusText}，非 JSON 响应：${preview}`);
   }
 
   if (status < 200 || status >= 300) {
-    throw new WidgetError(fallbackTitle, readableMessage(payload) || `HTTP ${status}`);
+    throw new WidgetError(fallbackTitle, `${route}${readableMessage(payload) || `HTTP ${status}`}`);
   }
 
   return payload;
+}
+
+async function safeResponsePreview(response) {
+  if (typeof response.text !== 'function') return '无响应正文';
+  try {
+    return compactText(await response.text()).slice(0, 120) || '空响应';
+  } catch {
+    return '无法读取响应正文';
+  }
+}
+
+function summarizeUrl(url) {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    return `${parsed.pathname}：`;
+  } catch {
+    return '';
+  }
 }
 
 function unwrapApiResponse(payload, fallbackTitle) {
@@ -324,6 +346,10 @@ function trimString(value) {
 
 function trimTrailingZeros(value, digits = 1) {
   return Number(value).toFixed(digits).replace(/\.?0+$/, '');
+}
+
+function compactText(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
 }
 
 function readableMessage(value) {

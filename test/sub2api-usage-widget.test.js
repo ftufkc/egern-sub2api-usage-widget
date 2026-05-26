@@ -16,6 +16,21 @@ function createResponse(body, status = 200) {
     async json() {
       return body;
     },
+    async text() {
+      return JSON.stringify(body);
+    },
+  };
+}
+
+function createTextResponse(text, status = 200) {
+  return {
+    status,
+    async json() {
+      throw new Error('invalid json');
+    },
+    async text() {
+      return text;
+    },
   };
 }
 
@@ -96,7 +111,7 @@ test('fetches today usage with credentials from env', async () => {
   });
   assert.equal(calls[0].method, 'POST');
   assert.equal(calls[0].url, 'https://sub2api.example.com/api/v1/auth/login');
-  assert.deepEqual(JSON.parse(calls[0].options.body), {
+  assert.deepEqual(calls[0].options.body, {
     email: 'owner@example.invalid',
     password: 'secret',
   });
@@ -107,6 +122,24 @@ test('fetches today usage with credentials from env', async () => {
   );
   assert.equal(calls[1].options.headers.Authorization, 'Bearer access-token');
   assert.equal(calls.length, 2);
+});
+
+test('renders endpoint and response preview when the server returns non JSON', async () => {
+  const { ctx } = createContext({
+    env: {
+      BASE_URL: 'https://sub2api.example.com',
+      EMAIL: 'owner@example.invalid',
+      PASSWORD: 'secret',
+    },
+    responses: [createTextResponse('<html><title>Not Found</title></html>', 404)],
+  });
+
+  const result = await widget(ctx);
+  const serialized = JSON.stringify(result);
+
+  assert.match(serialized, /登录失败/);
+  assert.match(serialized, /HTTP 404/);
+  assert.match(serialized, /Not Found/);
 });
 
 test('renders a medium widget with the four requested metrics', async () => {
