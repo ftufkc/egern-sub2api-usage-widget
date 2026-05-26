@@ -12,7 +12,7 @@ Egern 小组件模块，用来查看 Sub2API 今天的用量：
 在 Egern 中进入 `工具` -> `模块` -> 右上角 `+`，添加下面的模块 URL：
 
 ```text
-https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage.module.yaml
+https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api-usage-v2.module.yaml
 ```
 
 保存后进入模块的 `Env` 配置，填写：
@@ -23,7 +23,7 @@ https://raw.githubusercontent.com/ftufkc/egern-sub2api-usage-widget/main/sub2api
 | `EMAIL` | Sub2API 管理员邮箱 |
 | `PASSWORD` | Sub2API 管理员密码 |
 
-然后进入 `分析` -> 左上角小组件画廊，选择 `Sub2API 今日用量`。添加到 iOS 主屏幕后，长按 Egern 小组件并在编辑界面选择这个小组件名称。
+然后进入 `分析` -> 左上角小组件画廊，选择 `Sub2API 今日用量 v2`。添加到 iOS 主屏幕后，长按 Egern 小组件并在编辑界面选择这个小组件名称。
 
 ## 数据口径
 

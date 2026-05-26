@@ -1,4 +1,4 @@
-name: Sub2API 今日用量
+name: Sub2API 今日用量 v2
 description: 在 Egern 小组件中显示 Sub2API 今日请求数、Token、消费和平均耗时。
 author: ftufkc
 homepage: https://github.com/ftufkc/egern-sub2api-usage-widget
@@ -23,5 +23,5 @@ scriptings:
       timeout: 20
 
 widgets:
-  - name: Sub2API 今日用量
+  - name: Sub2API 今日用量 v2
     script_name: sub2api-usage-widget-v2
