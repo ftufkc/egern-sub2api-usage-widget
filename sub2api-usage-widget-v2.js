@@ -17,12 +17,27 @@ const COLORS = {
   danger: { light: '#B91C1C', dark: '#FCA5A5' },
 };
 
+const TOKEN_LABEL_TEXT_STYLE = {
+  font: { size: 'headline', weight: 'semibold' },
+  textColor: COLORS.title,
+  maxLines: 1,
+  minScale: 0.62,
+};
+
+const MUTED_SUBTITLE_TEXT_STYLE = {
+  font: { size: 'subheadline', weight: 'regular' },
+  textColor: COLORS.muted,
+  maxLines: 2,
+  minScale: 0.55,
+};
+
 const METRICS = [
   {
     label: '总请求数',
     key: 'totalRequests',
     formatter: (value) => formatNumber(value, { compact: false }),
     subtitle: () => '今日范围内',
+    subtitleStyle: TOKEN_LABEL_TEXT_STYLE,
     icon: 'sf-symbol:doc.text',
     iconColor: COLORS.blue,
     iconBackground: COLORS.blueBg,
@@ -51,6 +66,7 @@ const METRICS = [
     key: 'averageDurationMs',
     formatter: formatDuration,
     subtitle: () => '每次请求',
+    subtitleStyle: TOKEN_LABEL_TEXT_STYLE,
     icon: 'sf-symbol:clock',
     iconColor: COLORS.purple,
     iconBackground: COLORS.purpleBg,
@@ -326,10 +342,7 @@ function metricCard(metric, usage) {
           {
             type: 'text',
             text: metric.label,
-            font: { size: 'headline', weight: 'semibold' },
-            textColor: COLORS.title,
-            maxLines: 1,
-            minScale: 0.62,
+            ...TOKEN_LABEL_TEXT_STYLE,
           },
           {
             type: 'text',
@@ -342,10 +355,7 @@ function metricCard(metric, usage) {
           {
             type: 'text',
             text: metric.subtitle(usage),
-            font: { size: 'subheadline', weight: 'regular' },
-            textColor: COLORS.muted,
-            maxLines: 2,
-            minScale: 0.55,
+            ...(metric.subtitleStyle || MUTED_SUBTITLE_TEXT_STYLE),
           },
         ],
       },

@@ -55,6 +55,28 @@ function createContext({ env = {}, responses = [] } = {}) {
   };
 }
 
+function findTextNode(tree, text) {
+  if (!tree || typeof tree !== 'object') return null;
+  if (tree.type === 'text' && tree.text === text) return tree;
+
+  const children = Array.isArray(tree.children) ? tree.children : [];
+  for (const child of children) {
+    const result = findTextNode(child, text);
+    if (result) return result;
+  }
+
+  return null;
+}
+
+function textStyle(node) {
+  return {
+    font: node.font,
+    textColor: node.textColor,
+    maxLines: node.maxLines,
+    minScale: node.minScale,
+  };
+}
+
 test('normalizes the base URL and builds the today stats URL', () => {
   assert.equal(normalizeBaseUrl(' https://example.com/admin/usage '), 'https://example.com');
   assert.equal(normalizeBaseUrl('https://example.com/'), 'https://example.com');
@@ -192,6 +214,41 @@ test('renders a medium widget with the four requested metrics', async () => {
   assert.match(serialized, /\$179\.8771/);
   assert.match(serialized, /15\.4 s/);
   assert.ok(Date.parse(result.refreshAfter) > Date.now());
+});
+
+test('matches requested label and short subtitle styles to the Total Token label only', async () => {
+  const { ctx } = createContext({
+    env: {
+      BASE_URL: 'https://sub2api.example.com',
+      EMAIL: 'owner@example.invalid',
+      PASSWORD: 'secret',
+    },
+    responses: [
+      createResponse({ code: 0, data: { access_token: 'access-token' } }),
+      createResponse({
+        code: 0,
+        data: {
+          today_requests: 1876,
+          today_tokens: 212670000,
+          today_input_tokens: 10370000,
+          today_output_tokens: 923120,
+          today_cost: 1.5,
+          today_actual_cost: 179.8771,
+          average_duration_ms: 15440,
+        },
+      }),
+    ],
+  });
+
+  const result = await widget(ctx);
+  const tokenLabelStyle = textStyle(findTextNode(result, '总 Token'));
+
+  for (const text of ['总请求数', '今日范围内', '总消费', '平均耗时', '每次请求']) {
+    assert.deepEqual(textStyle(findTextNode(result, text)), tokenLabelStyle);
+  }
+
+  assert.notDeepEqual(textStyle(findTextNode(result, '输入: 10.37M / 输出: 923.12K')), tokenLabelStyle);
+  assert.notDeepEqual(textStyle(findTextNode(result, '实际 / $1.5 标准')), tokenLabelStyle);
 });
 
 test('renders a useful error widget when credentials are missing', async () => {
