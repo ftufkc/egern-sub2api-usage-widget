@@ -9,11 +9,9 @@ env_schema:
   BASE_URL:
     name: 网站 URL
     description: Sub2API 站点根地址，例如 https://example.com。不要填写 /admin/usage。
-    default_value: https://example.com
   EMAIL:
     name: 登录账号
     description: Sub2API 管理员邮箱。
-    default_value: admin@example.com
   PASSWORD:
     name: 登录密码
     description: Sub2API 管理员密码。此值仅保存在你的 Egern 配置中。

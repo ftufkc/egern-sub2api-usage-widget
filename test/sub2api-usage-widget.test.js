@@ -63,7 +63,7 @@ test('fetches today usage with credentials from env', async () => {
   const { ctx, calls } = createContext({
     env: {
       BASE_URL: 'https://sub2api.example.com/admin/usage',
-      EMAIL: 'admin@example.com',
+      EMAIL: 'owner@example.invalid',
       PASSWORD: 'secret',
     },
     responses: [
@@ -97,7 +97,7 @@ test('fetches today usage with credentials from env', async () => {
   assert.equal(calls[0].method, 'POST');
   assert.equal(calls[0].url, 'https://sub2api.example.com/api/v1/auth/login');
   assert.deepEqual(JSON.parse(calls[0].options.body), {
-    email: 'admin@example.com',
+    email: 'owner@example.invalid',
     password: 'secret',
   });
   assert.equal(calls[1].method, 'GET');
@@ -112,7 +112,7 @@ test('renders a medium widget with the four requested metrics', async () => {
   const { ctx } = createContext({
     env: {
       BASE_URL: 'https://sub2api.example.com',
-      EMAIL: 'admin@example.com',
+      EMAIL: 'owner@example.invalid',
       PASSWORD: 'secret',
     },
     responses: [
